@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 데이터 출력</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        p {
+            margin: 10px 0;
+        }
+        b {
+            color: orange;
+        }
+        i {
+            color: yellowgreen;
+        }
+    </style>
+</head>
+<body>
+    <h1>API 데이터</h1>
+    <div id="result"></div>
+
+    <script>
+        // DOM이 로드된 후 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            const resultDiv = document.getElementById('result');  // 결과를 출력할 div 요소
+            
+            // 데이터를 가져오는 함수
+            function fetchData() {
+                fetch('https://apis.data.go.kr/B551182/hospInfoServicev2/getHospBasisList?serviceKey=u9ids4VXsKVpFzEzkWWsO1MZBY2L%2Fdoo0TLquOwRRTw6Ahbm5Mim42P%2BXvt3Fhd6wm8OHhTvuGWHsRgfNyvT5A%3D%3D&pageNo=1&numOfRows=10&sidoCd=110000&zipCd=2010')  // API 요청 (URL 오타 수정)
+                    .then(response => response.text())  // 응답을 텍스트로 받아옴 (XML 형식으로 올 수 있음)
+                    .then(text => {
+                        console.log(text);  // 콘솔에 응답 내용 출력
+
+                        // XML 파싱
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(text, "application/xml");
+
+                        // 결과 코드 확인
+                        const resultCode = xmlDoc.getElementsByTagName('resultCode')[0]?.textContent;
+                        const resultMsg = xmlDoc.getElementsByTagName('resultMsg')[0]?.textContent;
+
+                        if (resultCode !== "00") {
+                            // 오류 메시지 출력
+                            resultDiv.innerHTML = `<b>오류:</b> ${resultMsg} <br><b>오류 코드:</b> ${resultCode}`;
+                            return;
+                        }
+
+                        // XML에서 데이터 추출
+                        const items = xmlDoc.getElementsByTagName('item');
+                        if (items.length === 0) {
+                            resultDiv.innerHTML = '검색된 병원이 없습니다.';
+                            return;
+                        }
+
+                        // 첫 번째 병원 데이터 추출 (여러 병원이 있을 경우 처리 필요)
+                        const item = items[0];
+                        const addr = item.getElementsByTagName('addr')[0]?.textContent || '정보 없음';
+                        const clCdNm = item.getElementsByTagName('clCdNm')[0]?.textContent || '정보 없음';
+                        const hospUrl = item.getElementsByTagName('hospUrl')[0]?.textContent || '정보 없음';
+                        const yadmNm = item.getElementsByTagName('yadmNm')[0]?.textContent || '정보 없음';
+
+                        // 웹문서에 표시하기
+                        const p = document.createElement('p');
+                        p.innerHTML = `
+                            <b>병원명:</b> ${yadmNm} <br>
+                            <b>병원 URL:</b> <a href="${hospUrl}" target="_blank">${hospUrl}</a> <br>
+                            <b>병원 분류:</b> ${clCdNm} <br>
+                            <b>주소:</b> ${addr}
+                        `;
+                        resultDiv.appendChild(p);
+
+                    })
+                    .catch(error => {
+                        console.error('데이터 가져오기 오류:', error);
+                        resultDiv.innerHTML = '데이터를 가져오는 데 오류가 발생했습니다.';
+                    });
+            }
+
+            // 데이터 가져오기 함수 호출
+            fetchData();
+        });
+    </script>
+</body>
+</html>
