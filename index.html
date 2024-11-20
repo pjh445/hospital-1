@@ -27,30 +27,23 @@
 </head>
 <body>
     <h1>서울지역 상급병원정보</h1>
-    <table id="hospital-table">
-        <thead>
-            <tr>
-                <th>병원명</th>
-				<th>전화번호</th>
-                <th>주소</th>
-                <th>홈페이지</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- 병원 정보가 여기에 추가됩니다 -->
-        </tbody>
+    <table>
+		<tr>
+			<th>병원명</th>
+			<th>전화번호</th>
+			<th>주소</th>
+			<th>홈페이지</th>
+		</tr>
+		<!-- 병원 정보가 여기에 추가됩니다 -->
     </table>
 
     <script>
-        // XML 데이터를 가져오는 함수
+	    // XML 데이터를 가져오는 함수, 
         async function fetchXML() {
-            try {
-                // XML 데이터 URL (XML 데이터를 제공하는 경로)
-                const response = await fetch('https://apis.data.go.kr/B551182/hospInfoServicev2/getHospBasisList?serviceKey=u9ids4VxsKVpFzEzkWWsO1MZBY2L%2Fdoo0TLquOwRRTw6Ahbm5Mim42P%2BXvt3Fhd6wm8OHhTvuGWHsRgfNyvT5A%3D%3D&pageNo=1&numOfRows=30&sidoCd=110000&zipCd=2024'); // XML 파일 경로
-                const xmlText = await response.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-
+            try { //XML(HTML)을 파싱하여 DOM객체로 변환
+                const xmlDoc = new DOMParser()
+				.parseFromString(await (await fetch('https://apis.data.go.kr/B551182/hospInfoServicev2/getHospBasisList?serviceKey=u9ids4VxsKVpFzEzkWWsO1MZBY2L%2Fdoo0TLquOwRRTw6Ahbm5Mim42P%2BXvt3Fhd6wm8OHhTvuGWHsRgfNyvT5A%3D%3D&pageNo=1&numOfRows=30&sidoCd=110000&zipCd=2024'))
+				.text(), 'application/xml');
                 displayData(xmlDoc);
             } catch (error) {
                 console.error("XML 데이터를 가져오는 중 오류 발생:", error);
@@ -59,22 +52,22 @@
 
         // XML 데이터를 HTML 테이블로 표시하는 함수
         function displayData(xmlDoc) {
-            const tableBody = document.querySelector("#hospital-table tbody");
+            const tableBody = document.querySelector("table");
             const items = xmlDoc.getElementsByTagName("item");
 
             // XML 데이터에서 각 병원 정보를 테이블에 추가
             for (let i = 0; i < items.length; i++) {
-                const name = items[i].getElementsByTagName("yadmNm")[0].textContent;
-				const tel =  items[i].getElementsByTagName("telno")[0].textContent;
-                const address = items[i].getElementsByTagName("addr")[0].textContent;
-                const url = items[i].getElementsByTagName("hospUrl")[0].textContent;
+                const name = items[i].getElementsByTagName("yadmNm")[0]?.textContent;
+				const tel =  items[i].getElementsByTagName("telno")[0]?.textContent;
+                const address = items[i].getElementsByTagName("addr")[0]?.textContent;
+                const url = items[i].getElementsByTagName("hospUrl")[0]?.textContent;
 
                 // 테이블 행을 생성하여 데이터를 채움
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td><strong>${name}</strong></td>
-					<td>${tel}</td>
-                    <td><a href='tel: ${address}'>${address}</a></td>
+					<td><a href='tel: ${address}'>${tel}</a></td>
+                    <td>${address}</td>
                     <td><a href="${url}" target="_blank">${url}</a></td>
                 `;
                 tableBody.appendChild(row);
@@ -82,7 +75,7 @@
         }
 
         // 페이지 로드 시 XML 데이터를 가져옴
-        document.addEventListener("DOMContentLoaded", fetchXML);
+        fetchXML();
     </script>
 </body>
 </html>
